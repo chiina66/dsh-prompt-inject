@@ -1,0 +1,13 @@
+# 依赖与产物
+node_modules/
+pnpm-lock.yaml
+*.tgz
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 本地调试
+*.log

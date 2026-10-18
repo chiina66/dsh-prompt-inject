@@ -1,0 +1,9 @@
+# dsh-prompt-inject bundle patch
+#
+# 只有在把本包当作 **bundle** 组合进 profile（package.json 的 dsh.bundle.patch）
+# 时才会读到这个文件。用插件管理器「从本地路径安装」或 install.ps1 安装时，
+# 安装流程会自己往 profile 的 cordis.patch.yml 写一条等价的 insert 记录，
+# 本文件不参与加载。
+- insert:
+    - id: prompt-inject
+      name: dsh-prompt-inject

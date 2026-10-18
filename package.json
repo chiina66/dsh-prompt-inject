@@ -1,0 +1,71 @@
+{
+  "name": "dsh-prompt-inject",
+  "version": "1.1.0",
+  "description": "DeepSeek Harness 插件：在设置里编辑一段全局系统提示词，注入到每一个模型回合（含子代理与工作流）；另带文件模式、开关与 prompt_inject 工具。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "vendor",
+    "scripts",
+    "test",
+    "install.mjs",
+    "install.ps1",
+    "install.sh",
+    "uninstall.ps1"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/schemastery": "~3.18.5"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "check": "node --check index.js && node --check client.js",
+    "test": "node test/smoke.mjs && node test/client-smoke.mjs"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "system-prompt",
+    "prompt-injection"
+  ],
+  "author": "来哦",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chiina66/dsh-prompt-inject.git"
+  },
+  "homepage": "https://github.com/chiina66/dsh-prompt-inject#readme",
+  "bugs": {
+    "url": "https://github.com/chiina66/dsh-prompt-inject/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
