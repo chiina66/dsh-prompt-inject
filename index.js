@@ -13,9 +13,10 @@
  *    写入优先落到当前实例的内存覆盖层（立刻生效），再去 `configEditor`
  *    把值持久化进 profile 的 `cordis.patch.yml`（重启后仍然在）。
  *
- * 位置：`order` 默认 -900，排在 Harness 身份段（-1000）之后、
- * 部署人格段（0）与工具说明（1000+）之前。`complete: true` 时这一段会
- * **取代**整份系统提示词（会连工具说明一起吃掉，非必要别开）。
+ * 位置：`order` 默认 10300，排在系统提示词**最下面**——本家最后一个固定段是
+ * 部署人格后缀（10200），所以 10300 保证落在所有 DSH 自带段落之后。
+ * `complete: true` 时这一段会**取代**整份系统提示词（会连工具说明一起吃掉，
+ * 非必要别开）。
  *
  * 安全阀：默认 `interpolate: false`，正文里的 `{{...}}` 原样保留。
  * 系统提示词段默认会做变量插值，遇到未注册的变量会让整次组装抛错，
@@ -34,8 +35,8 @@ export const inject = ['systemPrompt']
 /** 段名。全局层唯一，重复注册会抛错，所以用一个不会和别人撞的名字。 */
 const SECTION_NAME = 'prompt-inject:user'
 
-/** 默认插入位置。 */
-export const DEFAULT_ORDER = -900
+/** 默认插入位置：排在所有 DSH 自带段之后（最大的是部署人格后缀 10200）。 */
+export const DEFAULT_ORDER = 10300
 
 /** 默认正文文件：空串表示默认用内联 `content`（设置页里编辑的那个）。 */
 export const DEFAULT_CONTENT_FILE = ''
@@ -87,7 +88,7 @@ export const Config = z?.object
     contentFile: z.string().default(DEFAULT_CONTENT_FILE).volatile()
       .description('可选：正文文件路径，支持 ~ / $VAR / ${VAR} / %VAR%。文件存在时优先于 content，每回合实时读，改文件即生效。'),
     order: z.number().default(DEFAULT_ORDER)
-      .description('插入位置：越小越靠前。-1000 是 Harness 身份段，0 是部署人格段，工具说明从 1000 起。'),
+      .description('插入位置：越大越靠后。默认 10300 = 系统提示词最下面（DSH 最后一档固定段是部署人格后缀 10200）；想放最前面可设 -900。'),
     complete: z.boolean().default(false)
       .description('true 时用这段正文取代整份系统提示词（会丢掉工具说明等，慎用）。'),
     interpolate: z.boolean().default(false)
@@ -299,6 +300,7 @@ export function apply(ctx, config) {
             ? '内联 content'
             : '（无正文）'),
         '字符数: ' + state.text.length,
+        '位置: order ' + order + (complete ? '（complete：取代整份系统提示词）' : '（越大越靠后，10300 = 最下面）'),
       ]
       if (state.file && state.source !== 'file') lines.push('提示: 文件 ' + state.file + ' 不存在或为空，当前使用内联 content')
       if (state.text) {

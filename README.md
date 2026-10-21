@@ -33,7 +33,7 @@ github:chiina66/dsh-prompt-inject#v1.1.0
 ## 功能
 
 - **全局生效**：不止当前会话，子代理和工作流里的 agent 都会拿到同一段提示词
-- **位置可调**：默认排在 Harness 身份之后、人格与工具说明之前（`order: -900`）
+- **位置可调**：默认排在系统提示词最下面（`order: 10300`），工具说明、人格后缀之后
 - **热生效**：改完下一回合就变，不重启、不刷新
 - **文件模式**：把 `contentFile` 指到一个 `.md`，改文件即生效，适合在编辑器里写长提示词
 - **模型可改**：附带 `prompt_inject` 工具，可以直接对 agent 说「把注入改成 …」「关掉注入」
@@ -48,7 +48,7 @@ github:chiina66/dsh-prompt-inject#v1.1.0
     enabled: true       # 开关
     content: ''         # 正文，设置页编辑的就是它
     contentFile: ''     # 可选：改读文件，文件存在时优先于 content
-    order: -900         # 插入位置，越小越靠前
+    order: 10300        # 插入位置，越大越靠后；10300 = 最下面
     complete: false     # true = 用这段取代整份系统提示词（会吃掉工具说明，慎用）
     interpolate: false  # 是否对正文做 {{变量}} 插值
     trim: true          # 去掉首尾空白
