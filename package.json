@@ -1,6 +1,6 @@
 {
   "name": "dsh-prompt-inject",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "DeepSeek Harness 插件：在设置里编辑一段全局系统提示词，注入到每一个模型回合（含子代理与工作流）；另带文件模式、开关与 prompt_inject 工具。",
   "type": "module",
   "main": "index.js",

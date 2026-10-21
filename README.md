@@ -7,7 +7,7 @@
 DSH 里打开 **设置 → 插件 → 安装**，填：
 
 ```
-github:chiina66/dsh-prompt-inject#v1.1.0
+github:chiina66/dsh-prompt-inject#v1.1.1
 ```
 
 装完重启 DeepSeek Harness，设置左侧会多出「提示词注入」。
