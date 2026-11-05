@@ -262,10 +262,12 @@ export function apply(ctx, config) {
   if (!asBool(options.tool, true)) return
 
   void (async () => {
+    // defineTool 只是把「作者友好的参数 DSL」编译成注册表要的 JSON Schema。
+    // 宿主里解析不到 @deepseek-ai/dsh-tools 时（0.2.2 里 profiles/node_modules 的
+    // 拦截层可能指向不存在的全局安装），我们直接用同一个形状自己拼，功能不减。
     const defineTool = await loadDefineTool()
     if (typeof defineTool !== 'function') {
-      logger?.warn?.('[dsh-prompt-inject] 找不到 @deepseek-ai/dsh-tools，prompt_inject 工具未注册（注入本身不受影响）')
-      return
+      logger?.info?.('[dsh-prompt-inject] 未解析到 @deepseek-ai/dsh-tools，改用内置构造器注册 prompt_inject')
     }
 
     /** 写回配置：先落内存覆盖层，再尽力持久化到 profile 补丁。 */
@@ -360,43 +362,69 @@ export function apply(ctx, config) {
       return '未知 action: ' + action + '（可用: read / set / append / file / clear / enable / disable）'
     }
 
+    /** 工具作者侧定义：defineTool 与内置构造器共用同一份。 */
+    const toolOptions = {
+      name: 'prompt_inject',
+      description:
+        'Read or change the system-prompt injection owned by the dsh-prompt-inject plugin. '
+        + 'action=read shows the effective text, its source, and whether injection is on; '
+        + 'action=set replaces it with `content` (switching to inline text); '
+        + 'action=append adds `content` to the end of the current effective text; '
+        + 'action=file points the injection at a file path (`path`), read live on every turn; '
+        + 'action=clear empties it; action=enable and action=disable toggle it. '
+        + 'Changes take effect from the next turn and are persisted to the profile configuration when a config editor is present.',
+      parameters: {
+        action: {
+          type: 'string',
+          required: true,
+          description: 'One of: read, set, append, file, clear, enable, disable.',
+        },
+        content: {
+          type: 'string',
+          description: 'Text for set/append (or a path alias for file).',
+        },
+        path: {
+          type: 'string',
+          description: 'File path for action=file. Supports ~ and environment variables.',
+        },
+      },
+      output: {
+        schema: { type: 'string' },
+        render: (_args, value) => [{ type: 'text', text: String(value) }],
+      },
+      async execute(args) {
+        return run(args)
+      },
+    }
+
+    /**
+     * 不依赖 dsh-tools 的等价定义：参数形状与 defineTool 的编译结果一致
+     * （`{ type: 'object', properties, required }`，根对象不设 additionalProperties）。
+     */
+    const buildDefinition = () => (typeof defineTool === 'function'
+      ? defineTool(toolOptions)
+      : {
+        name: toolOptions.name,
+        description: toolOptions.description,
+        parameters: {
+          type: 'object',
+          properties: {
+            action: { type: 'string', description: toolOptions.parameters.action.description },
+            content: { type: 'string', description: toolOptions.parameters.content.description },
+            path: { type: 'string', description: toolOptions.parameters.path.description },
+          },
+          required: ['action'],
+        },
+        output: toolOptions.output,
+        execute: toolOptions.execute,
+      })
+
     try {
       ctx.inject(['tools'], (tctx) => {
         try {
-          tctx.tools.register(defineTool({
-            name: 'prompt_inject',
-            description:
-              'Read or change the system-prompt injection owned by the dsh-prompt-inject plugin. '
-              + 'action=read shows the effective text, its source, and whether injection is on; '
-              + 'action=set replaces it with `content` (switching to inline text); '
-              + 'action=append adds `content` to the end of the current effective text; '
-              + 'action=file points the injection at a file path (`path`), read live on every turn; '
-              + 'action=clear empties it; action=enable and action=disable toggle it. '
-              + 'Changes take effect from the next turn and are persisted to the profile configuration when a config editor is present.',
-            parameters: {
-              action: {
-                type: 'string',
-                required: true,
-                description: 'One of: read, set, append, file, clear, enable, disable.',
-              },
-              content: {
-                type: 'string',
-                description: 'Text for set/append (or a path alias for file).',
-              },
-              path: {
-                type: 'string',
-                description: 'File path for action=file. Supports ~ and environment variables.',
-              },
-            },
-            output: {
-              schema: { type: 'string' },
-              render: (_args, value) => [{ type: 'text', text: String(value) }],
-            },
-            async execute(args) {
-              return run(args)
-            },
-          }))
-          logger?.info?.('[dsh-prompt-inject] prompt_inject 工具已注册')
+          tctx.tools.register(buildDefinition())
+          logger?.info?.('[dsh-prompt-inject] prompt_inject 工具已注册'
+            + (typeof defineTool === 'function' ? '' : '（内置构造器）'))
         } catch (error) {
           logger?.warn?.('[dsh-prompt-inject] 工具注册失败: ' + String(error?.message ?? error))
         }

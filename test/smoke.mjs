@@ -119,6 +119,28 @@ try {
     check('complete 透传', sections[0].complete, true)
   }
 
+  console.log('工具定义（不依赖 dsh-tools 的兜底路径）')
+  {
+    const registered = []
+    const { ctx } = createCtx()
+    ctx.tools = {
+      register(definition) { registered.push(definition); return () => {} },
+    }
+    plugin.apply(ctx, { enabled: true, content: '工具测试', contentFile: '', tool: true })
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    check('注册了一个工具', registered.length, 1)
+    const definition = registered[0] ?? { parameters: {}, output: {} }
+    check('工具名', definition.name, 'prompt_inject')
+    check('参数根是 object', definition.parameters.type, 'object')
+    check('required 只有 action', JSON.stringify(definition.parameters.required), '["action"]')
+    check('三个参数都在', Object.keys(definition.parameters.properties ?? {}).sort().join(','), 'action,content,path')
+    check('输出 schema 是 string', definition.output.schema?.type, 'string')
+    check('render 是函数', typeof definition.output.render, 'function')
+    check('execute 是函数', typeof definition.execute, 'function')
+    const text = await definition.execute({ action: 'read' })
+    check('execute 能读出状态', typeof text === 'string' && text.includes('状态:'), true)
+  }
+
   console.log('路径展开')
   check('相对路径按 DSH_HOME 解析', plugin.expandPath('a.md').endsWith('a.md'), true)
   check('空串保持空串', plugin.expandPath('  '), '')

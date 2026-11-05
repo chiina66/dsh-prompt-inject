@@ -7,7 +7,7 @@
 DSH 里打开 **设置 → 插件 → 安装**，填：
 
 ```
-github:chiina66/dsh-prompt-inject#v1.1.1
+github:chiina66/dsh-prompt-inject#v1.1.2
 ```
 
 装完重启 DeepSeek Harness，设置左侧会多出「提示词注入」。
@@ -61,7 +61,10 @@ github:chiina66/dsh-prompt-inject#v1.1.1
 
 ## 环境
 
-DeepSeek Harness `0.2.1-rc.2`（cordis 4），无额外依赖。
+DeepSeek Harness `0.2.1` / `0.2.2`（cordis 4.x），无额外依赖。
+
+插件不会去 import 宿主的 `@deepseek-ai/*` 包：schema 用随包 `vendor/` 副本，
+工具定义在解析不到 `dsh-tools` 时自行拼装，所以插件依赖解析出问题也不会掉功能。
 
 ## License
 
